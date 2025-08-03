@@ -1,46 +1,55 @@
 import gradio as gr
-import os
 from src.utils import load_and_extract_text, chunk_text
 from src.pipeline import RAGPipeline
 
+pipeline = None
+
 def process_pdf_and_query(pdf_file, question):
-    """
-    Takes a PDF file and a question, builds the RAG pipeline,
-    and returns the answer.
-    """
-    if pdf_file is None or not question:
-        return "Please upload a PDF and enter a question."
+    global pipeline
+    if pipeline is None or not hasattr(pipeline, 'pdf_name') or pipeline.pdf_name != pdf_file.name:
+        yield "New PDF detected. Building knowledge base..."
+        try:
+            pdf_path = pdf_file.name
+            
+            yield "Step 1/3: Loading and chunking the document..."
+            document_text = load_and_extract_text(pdf_path)
+            text_chunks = chunk_text(document_text)
 
-    pdf_path = pdf_file.name
-    print(f"Processing PDF: {pdf_path}")
-    print(f"Received question: {question}")
+            yield "Step 2/3: Building the knowledge base (This may take a moment)..."
+            pipeline = RAGPipeline()
+            pipeline.build(text_chunks)
+            pipeline.pdf_name = pdf_file.name 
 
+            yield "Step 3/3: Knowledge base built. Ready to answer questions."
+        except Exception as e:
+            yield f"Error building pipeline: {e}"
+            return
+
+    if not question:
+        yield "Please enter a question to get an answer."
+        return
+
+    yield "Searching for the answer..."
     try:
-        yield "Step 1/3: Loading and chunking the document..."
-        document_text = load_and_extract_text(pdf_path)
-        text_chunks = chunk_text(document_text)
-
-        yield "Step 2/3: Building the knowledge base..."
-        pipeline = RAGPipeline()
-        pipeline.build(text_chunks)
-        yield "Step 3/3: Searching for the answer..."
-        answer = pipeline.query(question)
-
-        yield answer
+        result = pipeline.query(question)
+        
+        answer = result["answer"]
+        sources = result["sources"]
+        
+        formatted_output = f"**Answer:**\n{answer}\n\n---\n\n**Sources:**\n"
+        for i, doc in enumerate(sources):
+            source_text = doc.page_content.replace('\n', ' ').strip()
+            formatted_output += f"**[{i+1}]** {source_text[:250]}...\n\n"
+            
+        yield formatted_output
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return f"An error occurred during processing: {e}"
+        yield f"Error during query: {e}"
 
 
 with gr.Blocks(theme=gr.themes.Soft(), title="Kavosh-AI") as demo:
-    gr.Markdown(
-        """
-        # 📚 Kavosh-AI: Your Personal Research Assistant
-        Upload a PDF document, ask a question, and get a precise, cited answer from the text.
-        """
-    )
-
+    gr.Markdown("# 📚 Kavosh-AI: Your Personal Research Assistant")
+    
     with gr.Row():
         with gr.Column(scale=1):
             pdf_input = gr.File(label="Upload your PDF")
@@ -48,7 +57,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Kavosh-AI") as demo:
             submit_button = gr.Button("Get Answer", variant="primary")
 
         with gr.Column(scale=2):
-            answer_output = gr.Textbox(label="Answer & Status", interactive=False, lines=15)
+            answer_output = gr.Markdown(label="Answer & Sources")
 
     submit_button.click(
         fn=process_pdf_and_query,

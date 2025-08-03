@@ -13,41 +13,51 @@ class RAGPipeline:
         self.prompt = None
 
     def build(self, text_chunks):
-        """Builds the entire RAG pipeline."""
         print("Initializing free embedding model (HuggingFace)...")
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
         print("Building vector store with free embeddings...")
         self.vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-        print("Vector store built successfully.")
         self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
-
+        
+        # --- NEW: A more explicit prompt demanding citations ---
         template = """
-        You are an academic research assistant. Use the following pieces of context from a document to answer the question at the end.
-        If you don't know the answer, just say that you don't know.
-        Provide a concise and accurate answer based only on the provided context.
+        You are an academic research assistant. Use the following pieces of context to answer the question at the end.
+        Your answer must be based *only* on the provided context.
+        After providing the answer, list the exact context passages you used under a 'SOURCES:' heading.
+        Do not make up any information. If you don't know the answer from the context, say so.
 
-        Context: {context}
-        Question: {question}
-        Helpful Answer:
+        Context:
+        {context}
+
+        Question:
+        {question}
+
+        Answer:
         """
         self.prompt = PromptTemplate(template=template, input_variables=["context", "question"])
-
+        
         self.llm = ChatOpenAI(
             model="mistralai/mistral-7b-instruct:free",
             openai_api_key=self.config["api_key"],
-            openai_api_base=self.config["base_url"],   
+            openai_api_base=self.config["base_url"],
             temperature=0
         )
+        print("Pipeline built successfully.")
 
-    def query(self, question: str) -> str:
-        """Queries the pipeline with a question and returns the LLM's answer."""
+    def query(self, question: str) -> dict:
+        """
+        Queries the pipeline and returns a dictionary with the answer and sources.
+        """
         if not self.retriever or not self.llm or not self.prompt:
-            return "Pipeline not built. Please call the 'build' method first."
-        
-        relevant_docs = self.retriever.invoke(question)
-        formatted_prompt = self.prompt.format(context=relevant_docs, question=question)
-        response = self.llm.invoke(formatted_prompt)
+            return {"answer": "Pipeline not built. Please call 'build' method first.", "sources": []}
 
-        return response.content
+        relevant_docs = self.retriever.invoke(question)
+        context_for_prompt = "\n---\n".join([doc.page_content for doc in relevant_docs])
+        formatted_prompt = self.prompt.format(context=context_for_prompt, question=question)
+        response = self.llm.invoke(formatted_prompt)
+        return {
+            "answer": response.content,
+            "sources": relevant_docs
+        }
