@@ -1,5 +1,3 @@
-%%writefile src/pipeline.py
-
 from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
