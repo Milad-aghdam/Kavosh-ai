@@ -2,8 +2,7 @@
 
 Kavosh-AI is a smart, multilingual research assistant that extracts precise, cited answers from PDF documents. Ask questions in English or Persian (Farsi) and get answers based directly on the document's content, complete with source references.
 
- <!-- It's a great idea to add a screenshot of your Gradio app here! -->
-
+![Kavosh-AI Demo](./assets/kavosh-ai-demo.png)
 ---
 
 ## ✨ Features
@@ -53,7 +52,7 @@ Run the application:
 python app.py
 ```
 
-### 2. Running with Docker
+### 3. Running with Docker
 
 Make sure you have Docker Desktop installed and running.
 
