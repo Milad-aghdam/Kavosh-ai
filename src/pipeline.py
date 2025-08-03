@@ -1,6 +1,8 @@
+%%writefile src/pipeline.py
+
 from langchain.prompts import PromptTemplate
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings 
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from src.config import get_openrouter_config
 
@@ -18,11 +20,9 @@ class RAGPipeline:
         embeddings = HuggingFaceEmbeddings(
             model_name="sentence-transformers/all-MiniLM-L6-v2"
         )
-
         print("Building vector store with free embeddings...")
         self.vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
         print("Vector store built successfully.")
-
         self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
 
         template = """
@@ -37,9 +37,9 @@ class RAGPipeline:
         self.prompt = PromptTemplate(template=template, input_variables=["context", "question"])
 
         self.llm = ChatOpenAI(
-            model="mistralai/mistral-7b-instruct:free", 
+            model="mistralai/mistral-7b-instruct:free",
             openai_api_key=self.config["api_key"],
-            openai_api_base=self.config["base_url"],  
+            openai_api_base=self.config["base_url"],   
             temperature=0
         )
 

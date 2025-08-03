@@ -1,7 +1,6 @@
-%%writefile requirements.txt
 langchain
 openai
 sentence-transformers
 faiss-cpu
 pymupdf
-python-dotenv
+langchain-community

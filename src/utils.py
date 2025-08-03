@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import fitz 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 def load_and_extract_text(pdf_path: str) -> str:
