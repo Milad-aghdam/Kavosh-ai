@@ -5,3 +5,5 @@ faiss-cpu
 pymupdf
 langchain-community
 gradio
+langdetect
+deep-translator
