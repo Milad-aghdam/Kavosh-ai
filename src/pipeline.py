@@ -5,12 +5,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain_community.retrievers import BM25Retriever
-try:
-    from langchain.retrievers import EnsembleRetriever
-except ImportError:
-    from langchain.retrievers.ensemble import EnsembleRetriever
-
+from langchain.retrievers import EnsembleRetriever, ContextualCompressionRetriever
+from langchain.retrievers.document_compressors import CrossEncoderReranker
 from langchain_community.retrievers import BM25Retriever
+from langchain_community.cross_encoders import HuggingFaceCrossEncoder
 from src.config import get_openrouter_config
 
 
@@ -27,12 +25,11 @@ class RAGPipeline:
 
     def build(self, text_chunks):
         """
-        Builds the Hybrid Search (Vector + Keyword) pipeline.
+        Builds the Hybrid Search + Reranking pipeline.
         """
 
         device_type = 'cuda' if torch.cuda.is_available() else 'cpu'
-        logger.info(f"Initializing BGE-M3 model on: {device_type.upper()}")
-
+        logger.info(f"Initializing models on: {device_type.upper()}")
 
         embeddings = HuggingFaceEmbeddings(
             model_name="BAAI/bge-m3",
@@ -40,20 +37,36 @@ class RAGPipeline:
             encode_kwargs={'normalize_embeddings': True} 
         )
 
-        logger.info("Building FAISS Vector Store (Semantic Search)...")
+        logger.info("Building FAISS Vector Store...")
         self.vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-        faiss_retriever = self.vector_store.as_retriever(search_kwargs={"k": 5})
+        faiss_retriever = self.vector_store.as_retriever(search_kwargs={"k": 10})
 
-        logger.info("Building BM25 Index (Keyword Search)...")
+        logger.info("Building BM25 Index...")
         bm25_retriever = BM25Retriever.from_texts(text_chunks)
-        bm25_retriever.k = 5
+        bm25_retriever.k = 10
 
         logger.info("Initializing Hybrid Search (Ensemble)...")
-        self.retriever = EnsembleRetriever(
+        ensemble_retriever = EnsembleRetriever(
             retrievers=[faiss_retriever, bm25_retriever],
             weights=[0.5, 0.5]
         )
 
+
+        logger.info("Initializing Reranker (BAAI/bge-reranker-v2-m3)...")
+        
+        reranker_model = HuggingFaceCrossEncoder(
+            model_name="BAAI/bge-reranker-v2-m3",
+            model_kwargs={'device': device_type} 
+        )
+
+        compressor = CrossEncoderReranker(model=reranker_model, top_n=3)
+
+
+        self.retriever = ContextualCompressionRetriever(
+            base_compressor=compressor,
+            base_retriever=ensemble_retriever
+        )
+        
         template = """
         You are an academic research assistant. Use the following pieces of context to answer the question at the end.
         Your answer must be based *only* on the provided context.
@@ -76,7 +89,7 @@ class RAGPipeline:
             openai_api_base=self.config["base_url"],
             temperature=0 
         )
-        logger.info("Pipeline built successfully with Hybrid Search.")
+        logger.info("Pipeline built successfully with Hybrid Search + Reranking.")
 
     def query(self, question: str) -> dict:
         """
