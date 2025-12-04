@@ -3,6 +3,10 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
 from src.config import get_openrouter_config
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class RAGPipeline:
     def __init__(self):
@@ -13,15 +17,16 @@ class RAGPipeline:
         self.prompt = None
 
     def build(self, text_chunks):
-        print("Initializing free embedding model (HuggingFace)...")
+        logger.info("Initializing BGE-M3 embedding model (this may take a moment to download)...")
         embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+          model_name="BAAI/bge-m3",
+          model_kwargs={'device': 'cpu'},
+          encode_kwargs={'normalize_embeddings': True}
+      )
         print("Building vector store with free embeddings...")
         self.vector_store = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
         self.retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
         
-        # --- NEW: A more explicit prompt demanding citations ---
         template = """
         You are an academic research assistant. Use the following pieces of context to answer the question at the end.
         Your answer must be based *only* on the provided context.
