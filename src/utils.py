@@ -1,5 +1,5 @@
 import fitz 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 def load_and_extract_text(pdf_path: str) -> str:
     """
