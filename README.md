@@ -1,5 +1,4 @@
 
-```markdown
 ---
 title: Kavosh AI
 emoji: 📚
@@ -15,48 +14,34 @@ app_port: 7860
 Kavosh-AI is a smart, multilingual research assistant that extracts precise, cited answers from PDF documents. Ask questions in English or Persian (Farsi) and get answers based directly on the document's content, complete with source references.
 
 ![Kavosh-AI Demo](./assets/kavosh-ai-demo.png)
-
 ---
 
 ## 🏗️ System Architecture
-
-This project implements an **Advanced RAG (Retrieval-Augmented Generation)** pipeline designed for high precision and multilingual support.
-
-**Key Architectural Components:**
-1.  **Hybrid Search:** Combines **Dense Retrieval** (FAISS + BGE-M3 Embeddings) for semantic understanding and **Sparse Retrieval** (BM25) for keyword matching.
-2.  **Reranking:** Utilizes a Cross-Encoder (`BAAI/bge-reranker-v2-m3`) to re-score and filter the top retrieved documents, significantly reducing hallucinations.
-3.  **Multilingual Core:** Built natively to handle English and Persian queries interchangeably.
+The system follows an Advanced RAG architecture using Hybrid Search (Dense + Sparse) and Reranking to ensure high-accuracy retrieval.
 
 ![Architecture Diagram](./assets/architecture_diagram.png)
 
----
-
 ## ✨ Features
 
-- **Advanced RAG Pipeline:** Uses Hybrid Search (Vector + Keyword) to find the most relevant context.
-- **Cross-Encoder Reranking:** A "Judge" model evaluates retrieved data to ensure only high-quality context reaches the LLM.
+- **Retrieval-Augmented Generation (RAG):** Provides answers based on document content, not pre-trained knowledge, reducing hallucinations.
 - **Source Citations:** Every answer is backed by direct quotes from the source document for verification.
 - **Multilingual Support:** Seamlessly ask questions in English or Persian.
-- **Session Management:** Supports multiple concurrent users via isolated session states.
-- **Containerized:** Fully containerized with Docker for easy deployment and reproducibility.
+- **Interactive Web UI:** Easy-to-use interface built with Gradio for uploading PDFs and asking questions.
+- **Containerized:** Fully containerized with Docker for easy deployment and portability.
 
 ## 🛠️ Tech Stack
 
-- **Backend:** Python 3.10
-- **Orchestration:** LangChain
-- **Embeddings:** `BAAI/bge-m3` (State-of-the-art Multilingual Model)
-- **Retrieval:** FAISS (Dense) + Rank-BM25 (Sparse)
-- **Reranking:** `BAAI/bge-reranker-v2-m3`
-- **LLM Integration:** OpenRouter API (Mistral-7B / Llama-3)
+- **Backend:** Python
+- **AI/ML Frameworks:** LangChain, Sentence-Transformers (for embeddings), FAISS (for vector search)
+- **LLM Integration:** Connects to free, high-performance models via OpenRouter.
 - **Web UI:** Gradio
-- **DevOps:** Docker, GitHub Actions (CI/CD)
+- **Containerization:** Docker
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-- Python 3.10+
+- Python 3.9+
 - Git
-- Docker (Optional, for containerized run)
 - An API key from [OpenRouter.ai](https://openrouter.ai/)
 
 ### 2. Local Installation
@@ -65,48 +50,64 @@ Clone the repository:
 ```bash
 git clone https://github.com/YOUR-USERNAME/KAVOSH-AI.git
 cd KAVOSH-AI
-```
 
 Install dependencies:
-```bash
-pip install -r requirements.txt
-```
 
-Create a `.env` file in the root directory and add your API key:
-```bash
+code
+Bash
+download
+content_copy
+expand_less
+pip install -r requirements.txt
+
+Create a .env file in the root directory and add your API key:
+
+code
+Bash
+download
+content_copy
+expand_less
 OPENROUTER_API_KEY="your_openrouter_api_key_here"
-```
 
 Run the application:
-```bash
-python app.py
-```
 
-### 3. Running with Docker
+code
+Bash
+download
+content_copy
+expand_less
+python app.py
+3. Running with Docker
 
 Make sure you have Docker Desktop installed and running.
 
 Build the Docker image:
-```bash
+
+code
+Bash
+download
+content_copy
+expand_less
 docker build -t kavosh-ai .
-```
 
 Run the container:
-```bash
+
+code
+Bash
+download
+content_copy
+expand_less
 docker run -p 7860:7860 -e OPENROUTER_API_KEY="your_openrouter_api_key_here" kavosh-ai
-```
 
-Navigate to `http://localhost:7860` in your browser.
+Navigate to http://localhost:7860 in your browser.
 
----
+code
+Code
+download
+content_copy
+expand_less
+### Next Steps
+1.  **Copy** the code above.
+2.  **Paste** it into your `README.md`.
+3.  **Push** to GitHub:
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-```
