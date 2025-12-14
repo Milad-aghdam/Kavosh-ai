@@ -1,0 +1,104 @@
+{
+  "description": "Evaluation dataset for RAG system benchmarking",
+  "metadata": {
+    "created": "2024-12-14",
+    "domain": "Machine Learning Research Papers",
+    "num_questions": 10
+  },
+  "test_cases": [
+    {
+      "id": 1,
+      "question": "What is the learning rate used in the experiments?",
+      "relevant_doc_ids": ["doc_3_section_4", "doc_3_section_5"],
+      "ground_truth_answer": "The experiments use a learning rate of 0.001 with the Adam optimizer.",
+      "difficulty": "easy",
+      "expected_confidence": "high"
+    },
+    {
+      "id": 2,
+      "question": "How many layers does the neural network have?",
+      "relevant_doc_ids": ["doc_2_section_3"],
+      "ground_truth_answer": "The neural network has 12 transformer layers.",
+      "difficulty": "easy",
+      "expected_confidence": "high"
+    },
+    {
+      "id": 3,
+      "question": "What datasets were used for evaluation?",
+      "relevant_doc_ids": ["doc_1_section_2", "doc_5_section_1"],
+      "ground_truth_answer": "The paper evaluates on GLUE, SuperGLUE, and SQuAD 2.0 datasets.",
+      "difficulty": "medium",
+      "expected_confidence": "high"
+    },
+    {
+      "id": 4,
+      "question": "What is the batch size during training?",
+      "relevant_doc_ids": ["doc_3_section_4"],
+      "ground_truth_answer": "Training uses a batch size of 32.",
+      "difficulty": "easy",
+      "expected_confidence": "high"
+    },
+    {
+      "id": 5,
+      "question": "How does the model handle out-of-vocabulary words?",
+      "relevant_doc_ids": ["doc_2_section_2", "doc_2_section_7"],
+      "ground_truth_answer": "The model uses subword tokenization with BPE to handle OOV words.",
+      "difficulty": "medium",
+      "expected_confidence": "medium"
+    },
+    {
+      "id": 6,
+      "question": "What regularization techniques are applied?",
+      "relevant_doc_ids": ["doc_3_section_6"],
+      "ground_truth_answer": "The model applies dropout (0.1) and weight decay (0.01).",
+      "difficulty": "medium",
+      "expected_confidence": "medium"
+    },
+    {
+      "id": 7,
+      "question": "What is the computational cost compared to baseline models?",
+      "relevant_doc_ids": ["doc_4_section_3", "doc_4_section_5"],
+      "ground_truth_answer": "The model requires 2.5x more FLOPs than BERT-base but is 30% faster in wall-clock time due to optimizations.",
+      "difficulty": "hard",
+      "expected_confidence": "medium"
+    },
+    {
+      "id": 8,
+      "question": "Does the paper discuss ethical considerations?",
+      "relevant_doc_ids": ["doc_6_section_1"],
+      "ground_truth_answer": "Yes, the paper includes a section on bias mitigation and fairness evaluation.",
+      "difficulty": "medium",
+      "expected_confidence": "high"
+    },
+    {
+      "id": 9,
+      "question": "What is the model's performance on low-resource languages?",
+      "relevant_doc_ids": [],
+      "ground_truth_answer": "NOT_ANSWERED_IN_DOCUMENT",
+      "difficulty": "unanswerable",
+      "expected_confidence": "low"
+    },
+    {
+      "id": 10,
+      "question": "How does temperature affect the decoding process?",
+      "relevant_doc_ids": [],
+      "ground_truth_answer": "NOT_ANSWERED_IN_DOCUMENT",
+      "difficulty": "unanswerable",
+      "expected_confidence": "low"
+    }
+  ],
+  "notes": {
+    "purpose": "This dataset tests the RAG system's ability to:",
+    "capabilities": [
+      "Answer factual questions from documents (cases 1-8)",
+      "Correctly reject unanswerable questions (cases 9-10)",
+      "Maintain proper confidence calibration",
+      "Handle different difficulty levels"
+    ],
+    "interview_talking_points": [
+      "I created a balanced test set with answerable and unanswerable questions",
+      "I test edge cases like multi-document answers and missing information",
+      "I track expected vs actual confidence to measure calibration"
+    ]
+  }
+}
