@@ -59,19 +59,46 @@ def process_pdf_and_query(pdf_file, question, pipeline_state):
         result = current_pipeline.query(question_for_pipeline)
         answer_from_pipeline = result["answer"]
         sources = result["sources"]
+        confidence = result.get("confidence", 0.0)
+        confidence_level = result.get("confidence_level", "unknown")
+        should_reject = result.get("should_reject", False)
+        confidence_details = result.get("confidence_details", {})
+
+        # Log confidence information for monitoring
+        logger.info(f"Confidence: {confidence:.3f} ({confidence_level})")
+        logger.info(f"Confidence details: {confidence_details}")
 
         final_answer = answer_from_pipeline
         if original_lang == 'fa':
             yield "Translating answer back to Persian...", current_pipeline
             final_answer = translate_text(answer_from_pipeline, target_lang='fa')
-        
-        formatted_output = f"**پاسخ (Answer):**\n{final_answer}\n\n---\n\n**منابع (Sources):**\n"
+
+        # Format output with confidence information
+        formatted_output = f"**پاسخ (Answer):**\n{final_answer}\n\n"
+
+        # Add confidence details section
+        formatted_output += "---\n\n"
+        formatted_output += f"**📊 Confidence Metrics:**\n"
+        formatted_output += f"- Overall Confidence: {confidence:.2f} ({confidence_level})\n"
+        formatted_output += f"- Retrieval Quality: {confidence_details.get('reranker_max', 0.0):.2f}\n"
+        if confidence_details.get('semantic_similarity'):
+            formatted_output += f"- Answer Relevance: {confidence_details['semantic_similarity']:.2f}\n"
+
+        # Add sources
+        formatted_output += "\n---\n\n**منابع (Sources):**\n"
+
+        if should_reject:
+            # For rejected answers, show what was found but explain why it wasn't good enough
+            formatted_output += "*Note: The following passages were the closest matches found, but they may not directly answer your question.*\n\n"
+
         for i, doc in enumerate(sources):
             source_text = doc.page_content.replace('\n', ' ').strip()
-            formatted_output += f"**[{i+1}]** {source_text[:250]}...\n\n"
-            
+            # Show reranker score for each source if available
+            doc_score = doc.metadata.get('relevance_score', 'N/A')
+            formatted_output += f"**[{i+1}]** (relevance: {doc_score if isinstance(doc_score, str) else f'{doc_score:.2f}'}) {source_text[:250]}...\n\n"
+
         logger.info("Query successful.")
-        
+
         yield formatted_output, current_pipeline
 
     except Exception as e:
